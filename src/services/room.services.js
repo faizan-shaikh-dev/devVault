@@ -1,33 +1,21 @@
 import { api } from "./api";
 
-// create room
-export const createRoomApi = async (payload) => {
-  const { data } = await api.post("/create", payload);
-  return data;
-};
+// CREATE
+export const createRoomApi = (payload) =>
+  api.post("/create", payload).then(res => res.data);
 
-// join room (password)
-export const joinRoomApi = async (payload) => {
-  const { data } = await api.post("/join", payload);
-  return data;
-};
+// JOIN  ✅ MUST SEND roomId
+export const joinRoomApi = ({ roomId, password }) =>
+  api.post("/join", { roomId, password }).then(res => res.data);
 
-// get all rooms
-export const getAllRoomsApi = async () => {
-  const { data } = await api.get("/");
-  return data;
-};
+// GET ALL
+export const getAllRoomsApi = () =>
+  api.get("/").then(res => res.data);
 
-// save code
-export const updateCodeApi = async (roomId, code) => {
-  const { data } = await api.put(`/${roomId}/code`, { code });
-  return data;
-};
+// UPDATE CODE
+export const updateCodeApi = (roomId, code) =>
+  api.put(`/${roomId}/code`, { code }).then(res => res.data);
 
-// delete room
-export const deleteRoomApi = async (roomId, password) => {
-  const { data } = await api.delete(`/${roomId}`, {
-    data: { password },
-  });
-  return data;
-};
+// DELETE
+export const deleteRoomApi = (roomId, password) =>
+  api.delete(`/${roomId}`, { data: { password } }).then(res => res.data);
