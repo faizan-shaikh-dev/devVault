@@ -1,18 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MoreVertical, Trash2, Folder } from "lucide-react";
 import { useRoom } from "@/context/RoomContext";
 
 export default function RoomList() {
   const { rooms, openRoom, setDeleteModalRoom } = useRoom();
   const [menuRoom, setMenuRoom] = useState(null);
+  const menuRef = useRef(null);
 
-  // 🔥 CLOSE MENU ON WINDOW CLICK
+  // 🔥 CLOSE MENU ON OUTSIDE CLICK
   useEffect(() => {
-    const closeMenu = () => setMenuRoom(null);
-    window.addEventListener("click", closeMenu);
-    return () => window.removeEventListener("click", closeMenu);
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuRoom(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -28,7 +35,6 @@ export default function RoomList() {
           key={room.roomId}
           className="flex items-center justify-between px-4 py-2 text-sm hover:bg-zinc-800"
         >
-          {/* Room name */}
           <button
             onClick={() => openRoom(room)}
             className="truncate text-left hover:text-indigo-400"
@@ -36,11 +42,8 @@ export default function RoomList() {
             {room.roomName}
           </button>
 
-          {/* Three dots + dropdown */}
-          <div
-            className="relative"
-            onClick={(e) => e.stopPropagation()} // 🚨 IMPORTANT
-          >
+          {/* Dropdown */}
+          <div className="relative" ref={menuRef}>
             <button
               onClick={() =>
                 setMenuRoom(
@@ -57,7 +60,7 @@ export default function RoomList() {
                 className="
                   absolute top-full right-0 mt-2
                   bg-zinc-800 rounded shadow-lg
-                  z-50 min-w-[140px]
+                  z-50 min-w-35
                 "
               >
                 <button
