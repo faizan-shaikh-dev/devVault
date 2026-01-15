@@ -8,6 +8,7 @@ import {
   getAllRoomsApi,
   updateCodeApi,
   deleteRoomApi,
+  getRoomByIdApi, // ✅ NEW
 } from "@/services/room.services";
 import { socket } from "@/socket/socket";
 
@@ -21,7 +22,7 @@ export const RoomProvider = ({ children }) => {
   const [joinModalRoom, setJoinModalRoom] = useState(null);
   const [deleteModalRoom, setDeleteModalRoom] = useState(null);
 
-  /* ================= LOAD ROOMS ================= */
+  /* ================= LOAD ROOM LIST ================= */
   useEffect(() => {
     loadRooms();
   }, []);
@@ -35,33 +36,49 @@ export const RoomProvider = ({ children }) => {
     }
   };
 
-  /* ========== RESTORE ROOM ON REFRESH ========== */
+  /* ================= RESTORE ROOM ON REFRESH ================= */
   useEffect(() => {
-    const savedRoomId = localStorage.getItem("activeRoomId");
-    if (!savedRoomId || !rooms.length) return;
+    const restoreRoom = async () => {
+      const savedRoomId = localStorage.getItem("activeRoomId");
+      if (!savedRoomId) return;
 
-    const room = rooms.find((r) => r.roomId === savedRoomId);
-    if (!room) {
-      localStorage.removeItem("activeRoomId");
-      return;
-    }
+      try {
+        const room = await getRoomByIdApi(savedRoomId);
 
-    setActiveRoom(room);
-    socket.emit("join-room", savedRoomId);
-  }, [rooms]);
+        setActiveRoom(room);
+        setCode(room.code || "");
+
+        socket.emit("join-room", room.roomId);
+      } catch {
+        localStorage.removeItem("activeRoomId");
+      }
+    };
+
+    restoreRoom();
+  }, []);
 
   /* ================= CREATE ROOM ================= */
   const createRoom = async ({ roomName, password }) => {
     try {
       const room = await createRoomApi({ roomName, password });
-      setRooms((prev) => [room, ...prev]);
+
+      setRooms(prev => [
+        {
+          roomId: room.roomId,
+          roomName: room.roomName,
+          hasPassword: room.password !== null,
+          createdAt: room.createdAt,
+        },
+        ...prev,
+      ]);
+
       toast.success("Room created");
     } catch {
       toast.error("Create room failed");
     }
   };
 
-  /* ========== ROOM CLICK (PUBLIC / PRIVATE) ====== */
+  /* ================= OPEN ROOM ================= */
   const openRoom = (room) => {
     if (room.hasPassword) {
       setJoinModalRoom(room);
@@ -77,24 +94,20 @@ export const RoomProvider = ({ children }) => {
 
       setActiveRoom(room);
       setCode(room.code || "");
-
       localStorage.setItem("activeRoomId", room.roomId);
-      setJoinModalRoom(null);
 
+      setJoinModalRoom(null);
       socket.emit("join-room", room.roomId);
+
       toast.success("Joined room");
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "Unauthorized"
-      );
+      toast.error(err?.response?.data?.message || "Join failed");
     }
   };
 
   /* ================= LEAVE ROOM ================= */
   const leaveRoom = () => {
-    if (activeRoom) {
-      socket.emit("leave-room", activeRoom.roomId);
-    }
+    if (activeRoom) socket.emit("leave-room", activeRoom.roomId);
 
     localStorage.removeItem("activeRoomId");
     setActiveRoom(null);
@@ -118,22 +131,16 @@ export const RoomProvider = ({ children }) => {
   const deleteRoom = async (roomId, password) => {
     try {
       await deleteRoomApi(roomId, password);
-      toast.success("Room deleted");
 
-      setRooms((prev) =>
-        prev.filter((room) => room.roomId !== roomId)
-      );
-
+      setRooms(prev => prev.filter(r => r.roomId !== roomId));
       setDeleteModalRoom(null);
       localStorage.removeItem("activeRoomId");
 
-      if (activeRoom?.roomId === roomId) {
-        leaveRoom();
-      }
+      if (activeRoom?.roomId === roomId) leaveRoom();
+
+      toast.success("Room deleted");
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || "Delete failed"
-      );
+      toast.error(err?.response?.data?.message || "Delete failed");
     }
   };
 

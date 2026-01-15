@@ -5,55 +5,66 @@ import { useRoom } from "@/context/RoomContext";
 import { Trash2 } from "lucide-react";
 
 export default function DeleteRoomModal() {
-  const {
-    deleteModalRoom,
-    deleteRoom,
-    setDeleteModalRoom,
-  } = useRoom();
-
+  const { deleteModalRoom, setDeleteModalRoom, deleteRoom } = useRoom();
   const [password, setPassword] = useState("");
 
   if (!deleteModalRoom) return null;
 
   const handleDelete = async () => {
-    await deleteRoom(deleteModalRoom._id, password);
+    await deleteRoom(deleteModalRoom.roomId, password);
     setPassword("");
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-zinc-900 w-80 p-5 rounded space-y-4">
-        
+    <div
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center"
+      onClick={() => {
+        setDeleteModalRoom(null);
+        setPassword("");
+      }} // 👈 window click
+    >
+      <div
+        className="bg-zinc-900 w-80 p-5 rounded space-y-4"
+        onClick={(e) => e.stopPropagation()} // 🚨 KEY FIX
+      >
         <div className="flex items-center gap-2 text-red-400">
-          <Trash2 className="w-4 h-4" />
-          <h2 className="text-sm font-semibold">
-            Delete room
-          </h2>
+          <Trash2 size={18} />
+          <h2 className="font-semibold">Delete Room</h2>
         </div>
 
-        <p className="text-xs text-zinc-400">
-          Enter room password to confirm delete.
+        <p className="text-sm text-zinc-400">
+          Are you sure you want to delete
+          <span className="font-semibold text-white">
+            {" "}
+            {deleteModalRoom.roomName}
+          </span>
+          ?
         </p>
 
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 bg-zinc-800 rounded outline-none focus:ring-2 focus:ring-red-500/60"
-          placeholder="Password"
-        />
+        {deleteModalRoom.hasPassword && (
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Room password"
+            className="w-full p-2 bg-zinc-800 rounded"
+          />
+        )}
 
         <div className="flex gap-2">
           <button
             onClick={handleDelete}
-            className="flex-1 bg-red-600 hover:bg-red-700 py-2 rounded transition"
+            className="flex-1 bg-red-600 py-2 rounded"
           >
             Delete
           </button>
 
           <button
-            onClick={() => setDeleteModalRoom(null)}
-            className="flex-1 bg-zinc-700 hover:bg-zinc-600 py-2 rounded transition"
+            onClick={() => {
+              setDeleteModalRoom(null);
+              setPassword("");
+            }}
+            className="flex-1 bg-zinc-700 py-2 rounded"
           >
             Cancel
           </button>
