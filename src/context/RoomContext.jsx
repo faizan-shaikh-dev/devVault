@@ -8,7 +8,7 @@ import {
   getAllRoomsApi,
   updateCodeApi,
   deleteRoomApi,
-  getRoomByIdApi, // ✅ NEW
+  getRoomByIdApi,
 } from "@/services/room.services";
 import { socket } from "@/socket/socket";
 
@@ -22,7 +22,16 @@ export const RoomProvider = ({ children }) => {
   const [joinModalRoom, setJoinModalRoom] = useState(null);
   const [deleteModalRoom, setDeleteModalRoom] = useState(null);
 
-  /* ================= LOAD ROOM LIST ================= */
+  /* ================= SOCKET CONNECT ================= */
+  useEffect(() => {
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  /* ================= LOAD ROOMS ================= */
   useEffect(() => {
     loadRooms();
   }, []);
@@ -44,10 +53,8 @@ export const RoomProvider = ({ children }) => {
 
       try {
         const room = await getRoomByIdApi(savedRoomId);
-
         setActiveRoom(room);
         setCode(room.code || "");
-
         socket.emit("join-room", room.roomId);
       } catch {
         localStorage.removeItem("activeRoomId");
@@ -57,20 +64,41 @@ export const RoomProvider = ({ children }) => {
     restoreRoom();
   }, []);
 
+  /* ================= SOCKET LISTENERS ================= */
+  useEffect(() => {
+    socket.on("room-created", (room) => {
+      setRooms((prev) => [room, ...prev]);
+    });
+
+    socket.on("room-deleted", (roomId) => {
+      setRooms((prev) => prev.filter((r) => r.roomId !== roomId));
+    });
+
+    socket.on("code-update", (newCode) => {
+      setCode(newCode);
+    });
+
+    return () => {
+      socket.off("room-created");
+      socket.off("room-deleted");
+      socket.off("code-update");
+    };
+  }, []);
+
   /* ================= CREATE ROOM ================= */
   const createRoom = async ({ roomName, password }) => {
     try {
       const room = await createRoomApi({ roomName, password });
 
-      setRooms(prev => [
-        {
-          roomId: room.roomId,
-          roomName: room.roomName,
-          hasPassword: room.password !== null,
-          createdAt: room.createdAt,
-        },
-        ...prev,
-      ]);
+      const formattedRoom = {
+        roomId: room.roomId,
+        roomName: room.roomName,
+        hasPassword: room.password !== null,
+        createdAt: room.createdAt,
+      };
+
+      setRooms((prev) => [formattedRoom, ...prev]);
+      socket.emit("room-created", formattedRoom);
 
       toast.success("Room created");
     } catch {
@@ -96,8 +124,8 @@ export const RoomProvider = ({ children }) => {
       setCode(room.code || "");
       localStorage.setItem("activeRoomId", room.roomId);
 
-      setJoinModalRoom(null);
       socket.emit("join-room", room.roomId);
+      setJoinModalRoom(null);
 
       toast.success("Joined room");
     } catch (err) {
@@ -107,18 +135,21 @@ export const RoomProvider = ({ children }) => {
 
   /* ================= LEAVE ROOM ================= */
   const leaveRoom = () => {
-    if (activeRoom) socket.emit("leave-room", activeRoom.roomId);
-
     localStorage.removeItem("activeRoomId");
     setActiveRoom(null);
     setCode("");
   };
 
-  /* ================= SAVE CODE ================= */
+  /* ================= SAVE CODE (REAL-TIME) ================= */
   const saveCode = async (value) => {
     setCode(value);
 
     if (!activeRoom) return;
+
+    socket.emit("code-change", {
+      roomId: activeRoom.roomId,
+      code: value,
+    });
 
     try {
       await updateCodeApi(activeRoom.roomId, value);
@@ -132,12 +163,14 @@ export const RoomProvider = ({ children }) => {
     try {
       await deleteRoomApi(roomId, password);
 
-      setRooms(prev => prev.filter(r => r.roomId !== roomId));
+      setRooms((prev) => prev.filter((r) => r.roomId !== roomId));
+      socket.emit("room-deleted", roomId);
+
+      if (activeRoom?.roomId === roomId) {
+        leaveRoom();
+      }
+
       setDeleteModalRoom(null);
-      localStorage.removeItem("activeRoomId");
-
-      if (activeRoom?.roomId === roomId) leaveRoom();
-
       toast.success("Room deleted");
     } catch (err) {
       toast.error(err?.response?.data?.message || "Delete failed");
