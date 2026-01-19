@@ -9,7 +9,7 @@ export default function RoomList() {
   const [menuRoom, setMenuRoom] = useState(null);
   const menuRef = useRef(null);
 
-  // 🔥 CLOSE MENU ON OUTSIDE CLICK
+ 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -37,7 +37,7 @@ export default function RoomList() {
         >
           <button
             onClick={() => openRoom(room)}
-            className="truncate text-left hover:text-indigo-400"
+            className="truncate text-left hover:text-indigo-400 w-full"
           >
             {room.roomName}
           </button>
