@@ -22,6 +22,10 @@ export default function RoomList() {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+
+
+
   return (
     <div className="flex-1 overflow-y-auto relative">
       {/* Header */}
@@ -30,7 +34,7 @@ export default function RoomList() {
         <span className="text-xs uppercase text-zinc-400">Rooms</span>
       </div>
 
-      {rooms.map((room) => (
+      {(rooms && !rooms.length) ? rooms?.map((room) => (
         <div
           key={room.roomId}
           className="flex items-center justify-between px-4 py-2 text-sm hover:bg-zinc-800"
@@ -82,7 +86,7 @@ export default function RoomList() {
             )}
           </div>
         </div>
-      ))}
+      )) : <p className="text-gray-400 text-center text-sm mt-20">No rooms found</p>}
     </div>
   );
 }
