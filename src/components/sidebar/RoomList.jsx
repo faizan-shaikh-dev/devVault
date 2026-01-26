@@ -28,7 +28,7 @@ export default function RoomList() {
         rooms.map((room) => (
           <div
             key={room.roomId}
-            className="flex items-center justify-between px-4 py-2 text-sm hover:bg-zinc-800"
+            className="flex items-center transition-all duration-300 justify-between px-4 py-2 text-sm hover:bg-zinc-800"
           >
             <button
               onClick={() => openRoom(room)}
