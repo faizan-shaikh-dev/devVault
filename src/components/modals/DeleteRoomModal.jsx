@@ -7,12 +7,18 @@ import { Trash2 } from "lucide-react";
 export default function DeleteRoomModal() {
   const { deleteModalRoom, setDeleteModalRoom, deleteRoom } = useRoom();
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (!deleteModalRoom) return null;
 
   const handleDelete = async () => {
-    await deleteRoom(deleteModalRoom.roomId, password);
-    setPassword("");
+    setLoading(true);
+    try {
+      await deleteRoom(deleteModalRoom.roomId, password);
+      setPassword("");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,9 +60,12 @@ export default function DeleteRoomModal() {
         <div className="flex gap-2">
           <button
             onClick={handleDelete}
-            className="flex-1 bg-red-600 py-2 rounded"
+            disabled={loading}
+            className={`flex-1 bg-red-600 py-2 rounded text-white font-medium transition-all ${
+              loading ? "opacity-50 cursor-not-allowed" : "hover:bg-red-700"
+            }`}
           >
-            Delete
+            {loading ? "Deleting..." : "Delete"}
           </button>
 
           <button
