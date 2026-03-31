@@ -1,10 +1,8 @@
 "use client";
-
+ 
 import Sidebar from "@/components/sidebar/Sidebar";
 import EditorHeader from "@/components/editor/EditorHeader";
 import MonacoEditor from "@/components/editor/MonacoEditor";
-import JoinRoomModal from "@/components/modals/JoinRoomModal";
-import DeleteRoomModal from "@/components/modals/DeleteRoomModal";
 import { useRoom } from "@/context/RoomContext";
 
 export default function Page() {
@@ -28,9 +26,6 @@ export default function Page() {
           </>
         )}
       </main>
-
-      <JoinRoomModal />
-      <DeleteRoomModal />
     </div>
   );
 }
