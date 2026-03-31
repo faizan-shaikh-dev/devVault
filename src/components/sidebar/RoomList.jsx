@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MoreVertical, Trash2, Folder } from "lucide-react";
 import { useRoom } from "@/context/RoomContext";
 
 export default function RoomList() {
   const { rooms, openRoom, setDeleteModalRoom } = useRoom();
   const [menuRoom, setMenuRoom] = useState(null);
+  const menuRef = useRef(null);
 
   // Close dropdown on outside click
   useEffect(() => {
-    const handleClickOutside = () => setMenuRoom(null);
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuRoom(null);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -38,7 +43,7 @@ export default function RoomList() {
             </button>
 
             {/* Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -52,7 +57,9 @@ export default function RoomList() {
               {menuRoom?.roomId === room.roomId && (
                 <div className="absolute top-full right-0 mt-2 bg-zinc-800 rounded shadow-lg z-50 min-w-36">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alert("Opening Delete Modal for: " + room.roomName);
                       setDeleteModalRoom(room);
                       setMenuRoom(null);
                     }}
