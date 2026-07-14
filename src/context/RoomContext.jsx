@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import {
   createRoomApi,
@@ -141,7 +141,31 @@ export const RoomProvider = ({ children }) => {
   };
 
   /* ================= SAVE CODE (REAL-TIME) ================= */
-  const saveCode = async (value) => {
+  const saveCodeTimeoutRef = useRef(null);
+
+  // Clean up debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveCodeTimeoutRef.current) {
+        clearTimeout(saveCodeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const debouncedSaveDb = useCallback((roomId, value) => {
+    if (saveCodeTimeoutRef.current) {
+      clearTimeout(saveCodeTimeoutRef.current);
+    }
+    saveCodeTimeoutRef.current = setTimeout(async () => {
+      try {
+        await updateCodeApi(roomId, value);
+      } catch {
+        toast.error("Failed to save code");
+      }
+    }, 500);
+  }, []);
+
+  const saveCode = (value) => {
     setCode(value);
 
     if (!activeRoom) return;
@@ -151,11 +175,7 @@ export const RoomProvider = ({ children }) => {
       code: value,
     });
 
-    try {
-      await updateCodeApi(activeRoom.roomId, value);
-    } catch {
-      toast.error("Failed to save code");
-    }
+    debouncedSaveDb(activeRoom.roomId, value);
   };
 
   /* ================= DELETE ROOM ================= */
