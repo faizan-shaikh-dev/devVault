@@ -21,6 +21,10 @@ export default function DeleteRoomModal() {
     }
   };
 
+  const hasPassword = deleteModalRoom.hasPassword !== undefined
+    ? deleteModalRoom.hasPassword
+    : (deleteModalRoom.password !== undefined && deleteModalRoom.password !== null && deleteModalRoom.password !== "");
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center"
@@ -47,7 +51,7 @@ export default function DeleteRoomModal() {
           ?
         </p>
 
-        {deleteModalRoom.hasPassword && (
+        {hasPassword && (
           <input
             type="password"
             value={password}

@@ -14,6 +14,12 @@ import { socket } from "@/socket/socket";
 
 const RoomContext = createContext(null);
 
+const checkHasPassword = (room) => {
+  if (!room) return false;
+  if (room.hasPassword !== undefined) return room.hasPassword;
+  return room.password !== undefined && room.password !== null && room.password !== "";
+};
+
 export const RoomProvider = ({ children }) => {
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
@@ -21,6 +27,13 @@ export const RoomProvider = ({ children }) => {
 
   const [joinModalRoom, setJoinModalRoom] = useState(null);
   const [deleteModalRoom, setDeleteModalRoom] = useState(null);
+
+  const activeRoomRef = useRef(null);
+  useEffect(() => {
+    activeRoomRef.current = activeRoom;
+  }, [activeRoom]);
+
+  const leaveRoomRef = useRef(null);
 
   /* ================= SOCKET CONNECT ================= */
   useEffect(() => {
@@ -39,7 +52,11 @@ export const RoomProvider = ({ children }) => {
   const loadRooms = async () => {
     try {
       const data = await getAllRoomsApi();
-      setRooms(data);
+      const normalizedRooms = data.map((room) => ({
+        ...room,
+        hasPassword: checkHasPassword(room),
+      }));
+      setRooms(normalizedRooms);
     } catch {
       toast.error("Failed to load rooms");
     }
@@ -50,14 +67,16 @@ export const RoomProvider = ({ children }) => {
     const restoreRoom = async () => {
       const savedRoomId = localStorage.getItem("activeRoomId");
       if (!savedRoomId) return;
+      const savedPassword = localStorage.getItem("activeRoomPassword") || "";
 
       try {
-        const room = await getRoomByIdApi(savedRoomId);
+        const room = await getRoomByIdApi(savedRoomId, savedPassword);
         setActiveRoom(room);
         setCode(room.code || "");
         socket.emit("join-room", room.roomId);
       } catch {
         localStorage.removeItem("activeRoomId");
+        localStorage.removeItem("activeRoomPassword");
       }
     };
 
@@ -67,11 +86,21 @@ export const RoomProvider = ({ children }) => {
   /* ================= SOCKET LISTENERS ================= */
   useEffect(() => {
     socket.on("room-created", (room) => {
-      setRooms((prev) => [room, ...prev]);
+      const normalizedRoom = {
+        ...room,
+        hasPassword: checkHasPassword(room),
+      };
+      setRooms((prev) => [normalizedRoom, ...prev]);
     });
 
     socket.on("room-deleted", (roomId) => {
       setRooms((prev) => prev.filter((r) => r.roomId !== roomId));
+      if (activeRoomRef.current && activeRoomRef.current.roomId === roomId) {
+        if (leaveRoomRef.current) {
+          leaveRoomRef.current();
+        }
+        toast.error("The active room has been deleted by an administrator");
+      }
     });
 
     socket.on("code-update", (newCode) => {
@@ -93,7 +122,7 @@ export const RoomProvider = ({ children }) => {
       const formattedRoom = {
         roomId: room.roomId,
         roomName: room.roomName,
-        hasPassword: room.password !== null,
+        hasPassword: checkHasPassword(room),
         createdAt: room.createdAt,
       };
 
@@ -101,6 +130,9 @@ export const RoomProvider = ({ children }) => {
       socket.emit("room-created", formattedRoom);
 
       toast.success("Room created");
+
+      // Auto-join the newly created room
+      await joinRoom(room.roomId, password);
     } catch {
       toast.error("Create room failed");
     }
@@ -108,7 +140,7 @@ export const RoomProvider = ({ children }) => {
 
   /* ================= OPEN ROOM ================= */
   const openRoom = (room) => {
-    if (room.hasPassword) {
+    if (checkHasPassword(room)) {
       setJoinModalRoom(room);
     } else {
       joinRoom(room.roomId, "");
@@ -118,11 +150,21 @@ export const RoomProvider = ({ children }) => {
   /* ================= JOIN ROOM ================= */
   const joinRoom = async (roomId, password = "") => {
     try {
+      // If we are currently in a room, leave it first on the socket server
+      if (activeRoomRef.current) {
+        socket.emit("leave-room", activeRoomRef.current.roomId);
+      }
+
       const room = await joinRoomApi({ roomId, password });
 
       setActiveRoom(room);
       setCode(room.code || "");
       localStorage.setItem("activeRoomId", room.roomId);
+      if (password) {
+        localStorage.setItem("activeRoomPassword", password);
+      } else {
+        localStorage.removeItem("activeRoomPassword");
+      }
 
       socket.emit("join-room", room.roomId);
       setJoinModalRoom(null);
@@ -135,10 +177,16 @@ export const RoomProvider = ({ children }) => {
 
   /* ================= LEAVE ROOM ================= */
   const leaveRoom = () => {
+    if (activeRoomRef.current) {
+      socket.emit("leave-room", activeRoomRef.current.roomId);
+    }
     localStorage.removeItem("activeRoomId");
+    localStorage.removeItem("activeRoomPassword");
     setActiveRoom(null);
     setCode("");
   };
+
+  leaveRoomRef.current = leaveRoom;
 
   /* ================= SAVE CODE (REAL-TIME) ================= */
   const saveCodeTimeoutRef = useRef(null);
@@ -186,7 +234,7 @@ export const RoomProvider = ({ children }) => {
       setRooms((prev) => prev.filter((r) => r.roomId !== roomId));
       socket.emit("room-deleted", roomId);
 
-      if (activeRoom?.roomId === roomId) {
+      if (activeRoomRef.current?.roomId === roomId) {
         leaveRoom();
       }
 

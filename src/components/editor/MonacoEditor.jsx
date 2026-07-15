@@ -5,6 +5,7 @@ import { useRoom } from "@/context/RoomContext";
 export default function MonacoEditor() {
   const { code, saveCode } = useRoom();
   const editorRef = useRef(null);
+  const isRemoteChangeRef = useRef(false);
 
   // Store editor instance on mount
   const handleEditorDidMount = (editor, monaco) => {
@@ -14,12 +15,31 @@ export default function MonacoEditor() {
   // Sync state changes from socket/context into Monaco Editor imperatively
   useEffect(() => {
     if (editorRef.current) {
-      const editorValue = editorRef.current.getValue();
+      const editor = editorRef.current;
+      const editorValue = editor.getValue();
       if (code !== editorValue) {
-        editorRef.current.setValue(code);
+        isRemoteChangeRef.current = true;
+        const model = editor.getModel();
+        if (model) {
+          editor.executeEdits("remote-sync", [
+            {
+              range: model.getFullModelRange(),
+              text: code,
+              forceMoveMarkers: true,
+            },
+          ]);
+        }
       }
     }
   }, [code]);
+
+  const handleChange = (value) => {
+    if (isRemoteChangeRef.current) {
+      isRemoteChangeRef.current = false;
+      return;
+    }
+    saveCode(value || "");
+  };
 
   return (
     <Editor
@@ -28,7 +48,7 @@ export default function MonacoEditor() {
       defaultLanguage="javascript"
       defaultValue={code}
       onMount={handleEditorDidMount}
-      onChange={saveCode}
+      onChange={handleChange}
     />
   );
 }

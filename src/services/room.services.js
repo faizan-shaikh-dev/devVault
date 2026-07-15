@@ -13,8 +13,8 @@ export const getAllRoomsApi = () =>
   api.get("").then((res) => res.data);
 
 // GET FULL ROOM (FOR REFRESH)
-export const getRoomByIdApi = (roomId) =>
-  api.get(`${roomId}`).then((res) => res.data);
+export const getRoomByIdApi = (roomId, password = "") =>
+  api.get(`${roomId}`, { params: { password } }).then((res) => res.data);
 
 // UPDATE CODE
 export const updateCodeApi = (roomId, code) =>

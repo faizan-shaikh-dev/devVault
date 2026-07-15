@@ -45,7 +45,6 @@ function RoomItem({ room, openRoom, setDeleteModalRoom }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                alert("Opening Delete Modal for: " + room.roomName);
                 setDeleteModalRoom(room);
                 setMenuOpen(false);
               }}
