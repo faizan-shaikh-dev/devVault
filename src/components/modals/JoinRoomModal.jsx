@@ -21,11 +21,11 @@ export default function JoinRoomModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center"
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center transition-colors duration-200"
       onClick={() => setJoinModalRoom(null)} // 👈 window click
     >
       <div
-        className="bg-zinc-900 w-80 p-5 rounded space-y-4"
+        className="bg-bg-secondary border border-border-custom text-text-primary w-80 p-5 rounded space-y-4"
         onClick={(e) => e.stopPropagation()} // 🚨 KEY FIX
       >
         <div className="flex items-center gap-2 text-indigo-400">
@@ -33,9 +33,9 @@ export default function JoinRoomModal() {
           <h2 className="font-semibold">Join Room</h2>
         </div>
 
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-text-secondary">
           Enter password for
-          <span className="font-semibold text-white">
+          <span className="font-semibold text-text-primary">
             {" "}
             {joinModalRoom.roomName}
           </span>
@@ -46,21 +46,21 @@ export default function JoinRoomModal() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Room password"
-          className="w-full p-2 bg-zinc-800 rounded outline-none"
+          className="w-full p-2 bg-bg-input text-text-primary border border-border-custom rounded outline-none focus:ring-2 focus:ring-indigo-500/60"
         />
 
         <div className="flex gap-2">
           <button
             onClick={handleJoin}
             disabled={!password.trim()}
-            className="flex-1 bg-indigo-600 py-2 rounded disabled:opacity-50"
+            className="flex-1 bg-indigo-600 py-2 rounded disabled:opacity-50 text-white cursor-pointer hover:bg-indigo-700"
           >
             Join
           </button>
 
           <button
             onClick={() => setJoinModalRoom(null)}
-            className="flex-1 bg-zinc-700 py-2 rounded"
+            className="flex-1 bg-bg-button-cancel text-text-primary py-2 rounded cursor-pointer hover:opacity-90"
           >
             Cancel
           </button>

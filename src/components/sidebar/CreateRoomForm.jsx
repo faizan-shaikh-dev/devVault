@@ -22,7 +22,7 @@ export default function CreateRoomForm() {
       <input
         value={roomName}
         placeholder="Room name"
-        className="w-full p-2 rounded bg-zinc-800 text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/60 transition"
+        className="w-full p-2 rounded bg-bg-input text-text-primary border border-border-custom outline-none focus:ring-2 focus:ring-indigo-500/60 transition-all duration-200"
         onChange={(e) => setRoomName(e.target.value)}
       />
 
@@ -30,7 +30,7 @@ export default function CreateRoomForm() {
         value={password}
         type="password"
         placeholder="Password"
-        className="w-full p-2 rounded bg-zinc-800 text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/60 transition"
+        className="w-full p-2 rounded bg-bg-input text-text-primary border border-border-custom outline-none focus:ring-2 focus:ring-indigo-500/60 transition-all duration-200"
         onChange={(e) => setPassword(e.target.value)}
       />
 

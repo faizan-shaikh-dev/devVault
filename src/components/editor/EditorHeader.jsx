@@ -7,10 +7,10 @@ export default function EditorHeader() {
   if (!activeRoom) return null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-900">
+    <div className="flex items-center justify-between px-4 py-2 border-b border-border-custom bg-bg-secondary transition-colors duration-200">
       
       {/* Room Name */}
-      <div className="flex items-center gap-2 text-sm text-zinc-300">
+      <div className="flex items-center gap-2 text-sm text-text-primary">
         <Hash className="w-4 h-4 text-indigo-400" />
         <span className="font-medium truncate max-w-60">
           {activeRoom.roomName}
@@ -37,7 +37,8 @@ export default function EditorHeader() {
           className="
             absolute right-0 top-full mt-2
             scale-0 group-hover:scale-100
-            bg-zinc-200 text-red-800
+            bg-bg-dropdown text-red-500
+            border border-border-dropdown
             text-xs px-2 py-1 rounded
             whitespace-nowrap
             transition-transform

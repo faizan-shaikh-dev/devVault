@@ -1,9 +1,11 @@
 import { useRef, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { useRoom } from "@/context/RoomContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function MonacoEditor() {
   const { code, saveCode } = useRoom();
+  const { theme } = useTheme();
   const editorRef = useRef(null);
   const isRemoteChangeRef = useRef(false);
 
@@ -44,7 +46,7 @@ export default function MonacoEditor() {
   return (
     <Editor
       height="100%"
-      theme="vs-dark"
+      theme={theme === "dark" ? "vs-dark" : "light"}
       defaultLanguage="javascript"
       defaultValue={code}
       onMount={handleEditorDidMount}

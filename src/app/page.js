@@ -9,12 +9,12 @@ export default function Page() {
   const { activeRoom } = useRoom();
 
   return (
-    <div className="h-screen flex bg-zinc-950 text-white overflow-hidden">
+    <div className="h-screen flex bg-bg-primary text-text-primary overflow-hidden transition-colors duration-200">
       <Sidebar />
 
       <main className="flex-1 flex flex-col">
         {!activeRoom ? (
-          <div className="flex-1 flex items-center justify-center text-zinc-500">
+          <div className="flex-1 flex items-center justify-center text-text-secondary">
             Select or create a room to start coding
           </div>
         ) : (
