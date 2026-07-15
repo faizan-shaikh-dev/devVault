@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { MoreVertical, Trash2, Folder } from "lucide-react";
 import { useRoom } from "@/context/RoomContext";
 
-function RoomItem({ room, openRoom, setDeleteModalRoom }) {
+function RoomItem({ room, openRoom, setDeleteModalRoom, isActive }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -20,10 +20,12 @@ function RoomItem({ room, openRoom, setDeleteModalRoom }) {
   }, []);
 
   return (
-    <div className="flex items-center transition-all duration-300 justify-between px-4 py-2 text-sm hover:bg-zinc-800">
+    <div className={`flex items-center transition-all duration-300 justify-between px-4 py-2 text-sm hover:bg-zinc-800 ${
+      isActive ? "bg-zinc-800/85 border-l-2 border-indigo-500" : ""
+    }`}>
       <button
         onClick={() => openRoom(room)}
-        className="truncate text-left hover:text-indigo-400 w-full"
+        className={`truncate text-left w-full ${isActive ? "text-indigo-400 font-semibold" : "hover:text-indigo-400"}`}
       >
         {room.roomName}
       </button>
@@ -61,7 +63,7 @@ function RoomItem({ room, openRoom, setDeleteModalRoom }) {
 }
 
 export default function RoomList() {
-  const { rooms, openRoom, setDeleteModalRoom } = useRoom();
+  const { rooms, openRoom, setDeleteModalRoom, activeRoom } = useRoom();
 
   return (
     <div className="flex-1 overflow-y-auto relative">
@@ -79,6 +81,7 @@ export default function RoomList() {
             room={room}
             openRoom={openRoom}
             setDeleteModalRoom={setDeleteModalRoom}
+            isActive={activeRoom?.roomId === room.roomId}
           />
         ))
       ) : (

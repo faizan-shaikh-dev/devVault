@@ -140,6 +140,9 @@ export const RoomProvider = ({ children }) => {
 
   /* ================= OPEN ROOM ================= */
   const openRoom = (room) => {
+    if (activeRoomRef.current && activeRoomRef.current.roomId === room.roomId) {
+      return; // Already in this room!
+    }
     if (checkHasPassword(room)) {
       setJoinModalRoom(room);
     } else {
