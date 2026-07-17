@@ -38,7 +38,7 @@ export default function Sidebar() {
           aria-label="Toggle theme"
         >
           {theme === "dark" ? (
-            <Sun className="w-5 h-5 text-amber-400" />
+            <Sun className="w-5 h-5 text-indigo-400" />
           ) : (
             <Moon className="w-5 h-5 text-indigo-600" />
           )}
