@@ -24,6 +24,7 @@ export const RoomProvider = ({ children }) => {
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
   const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("javascript");
 
   const [joinModalRoom, setJoinModalRoom] = useState(null);
   const [deleteModalRoom, setDeleteModalRoom] = useState(null);
@@ -254,11 +255,13 @@ export const RoomProvider = ({ children }) => {
         rooms,
         activeRoom,
         code,
+        language,
 
         joinModalRoom,
         deleteModalRoom,
         setJoinModalRoom,
         setDeleteModalRoom,
+        setLanguage,
 
         createRoom,
         openRoom,

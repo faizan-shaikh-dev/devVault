@@ -4,7 +4,7 @@ import { useRoom } from "@/context/RoomContext";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function MonacoEditor() {
-  const { code, saveCode } = useRoom();
+  const { code, saveCode, language } = useRoom();
   const { theme } = useTheme();
   const editorRef = useRef(null);
   const isRemoteChangeRef = useRef(false);
@@ -47,7 +47,7 @@ export default function MonacoEditor() {
     <Editor
       height="100%"
       theme={theme === "dark" ? "vs-dark" : "light"}
-      defaultLanguage="javascript"
+      language={language}
       defaultValue={code}
       onMount={handleEditorDidMount}
       onChange={handleChange}
